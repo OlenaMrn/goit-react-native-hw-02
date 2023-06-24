@@ -24,15 +24,15 @@ const LoginScreen = ({ changeScreen }) => {
         />
         <TextInput
           style={styles.inputPassword}
-          placeholder="••••••••••••"
+          placeholder="Пароль"
           secureTextEntry={true}
         />
         <TouchableOpacity style={styles.showPassword} activeOpacity={0.5}>
           <Text style={styles.showPasswordText}>Показати</Text>
         </TouchableOpacity>
-              <View></View>
-              
-            <TouchableOpacity style={styles.loginButton} activeOpacity={0.5}>
+        <View></View>
+
+        <TouchableOpacity style={styles.loginButton} activeOpacity={0.5}>
           <Text style={styles.loginButtonText}>Увійти</Text>
         </TouchableOpacity>
         <TouchableOpacity
