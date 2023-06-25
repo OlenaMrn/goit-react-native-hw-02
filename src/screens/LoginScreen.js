@@ -1,4 +1,5 @@
-import React from "react";
+
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -11,6 +12,26 @@ import {
 import { AntDesign } from "@expo/vector-icons";
 
 const LoginScreen = ({ changeScreen }) => {
+  const [mail, setMail] = useState("");
+  const [password, setPassword] = useState("");
+  const [hidePassword, setHidePassword] = useState(true);
+
+  const handleMail = (text) => {
+    setMail(text);
+  };
+
+  const handlePassword = (text) => {
+    setPassword(text);
+  };
+
+  const login = () => {
+    if (!mail || !password) {
+      alert("Please fill in all fields");
+      return;
+    }
+    console.log(`Email: ${mail}, Password: ${password}`);
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS == "ios" ? "padding" : "height"}
@@ -21,18 +42,32 @@ const LoginScreen = ({ changeScreen }) => {
           style={styles.inputMail}
           placeholder="Адреса електронної пошти"
           inputMode="email"
+          value={mail}
+          onChangeText={handleMail}
         />
         <TextInput
           style={styles.inputPassword}
           placeholder="Пароль"
-          secureTextEntry={true}
+          secureTextEntry={hidePassword}
+          value={password}
+          onChangeText={handlePassword}
         />
-        <TouchableOpacity style={styles.showPassword} activeOpacity={0.5}>
-          <Text style={styles.showPasswordText}>Показати</Text>
+        <TouchableOpacity
+          style={styles.showPassword}
+          activeOpacity={0.5}
+          onPress={() => {
+            setHidePassword(!hidePassword);
+          }}>
+          <Text style={styles.showPasswordText}>
+            {hidePassword ? "Показати" : "Приховати"}
+          </Text>
         </TouchableOpacity>
         <View></View>
 
-        <TouchableOpacity style={styles.loginButton} activeOpacity={0.5}>
+        <TouchableOpacity
+          style={styles.loginButton}
+          activeOpacity={0.5}
+          onPress={login}>
           <Text style={styles.loginButtonText}>Увійти</Text>
         </TouchableOpacity>
         <TouchableOpacity

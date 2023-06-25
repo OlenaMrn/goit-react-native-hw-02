@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -11,6 +11,31 @@ import {
 import { AntDesign } from "@expo/vector-icons";
 
 const RegistrationScreen = ({ changeScreen }) => {
+  const [login, setLogin] = useState("");
+  const [mail, setMail] = useState("");
+  const [password, setPassword] = useState("");
+  const [hidePassword, setHidePassword] = useState(true);
+
+  const handleLogin = (text) => {
+    setLogin(text);
+  };
+
+  const handleMail = (text) => {
+    setMail(text);
+  };
+
+  const handlePassword = (text) => {
+    setPassword(text);
+  };
+
+const register = () => {
+  if (!login || !mail || !password) {
+    alert("Please fill in all fields");
+    return;
+  }
+  console.log(`Login: ${login}, Email: ${mail}, Password: ${password}`);
+};
+    
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS == "ios" ? "padding" : "height"}
@@ -25,21 +50,38 @@ const RegistrationScreen = ({ changeScreen }) => {
         style={styles.inputLogin}
         placeholder="Логін"
         inputMode="text"
+        value={login}
+        onChangeText={handleLogin}
       />
       <TextInput
         style={styles.inputMail}
         placeholder="Адреса електронної пошти"
         inputMode="email"
+        value={mail}
+        onChangeText={handleMail}
       />
       <TextInput
         style={styles.inputPassword}
         placeholder="Пароль"
-        secureTextEntry={true}
+        secureTextEntry={hidePassword}
+        value={password}
+        onChangeText={handlePassword}
       />
-      <TouchableOpacity style={styles.showPassword} activeOpacity={0.5}>
-        <Text style={styles.showPasswordText}>Показати</Text>
+      <TouchableOpacity
+        style={styles.showPassword}
+        activeOpacity={0.5}
+        onPress={() => {
+          setHidePassword(!hidePassword);
+        }}>
+        <Text style={styles.showPasswordText}>
+          {hidePassword ? "Показати" : "Приховати"}
+        </Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.registerButton} activeOpacity={0.5}>
+
+      <TouchableOpacity
+        style={styles.registerButton}
+        activeOpacity={0.5}
+        onPress={register}>
         <Text style={styles.registerButtonText}>Зареєстуватися</Text>
       </TouchableOpacity>
       <TouchableOpacity
@@ -51,7 +93,6 @@ const RegistrationScreen = ({ changeScreen }) => {
     </KeyboardAvoidingView>
   );
 };
-
 
 const styles = StyleSheet.create({
   containerKeyBoard: {
