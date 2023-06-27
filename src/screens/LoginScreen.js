@@ -8,10 +8,14 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  ImageBackground,
+  TouchableWithoutFeedback,
+  Keyboard,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 
-const LoginScreen = ({ changeScreen }) => {
+const LoginScreen = ({ navigation }) => {
+  const [login, setLogin] = useState("");
   const [mail, setMail] = useState("");
   const [password, setPassword] = useState("");
   const [hidePassword, setHidePassword] = useState(true);
@@ -24,83 +28,111 @@ const LoginScreen = ({ changeScreen }) => {
     setPassword(text);
   };
 
-  const login = () => {
+  const handlelogin = () => {
     if (!mail || !password) {
       alert("Please fill in all fields");
       return;
     }
     console.log(`Email: ${mail}, Password: ${password}`);
+    setLogin("");
+    setMail("");
+    setPassword("");
+    navigation.navigate("Home");
   };
 
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS == "ios" ? "padding" : "height"}
-      style={styles.containerKeyBoard}>
-      <View style={styles.container}>
-        <Text style={styles.title}>Увійти</Text>
-        <TextInput
-          style={styles.inputMail}
-          placeholder="Адреса електронної пошти"
-          inputMode="email"
-          value={mail}
-          onChangeText={handleMail}
-        />
-        <TextInput
-          style={styles.inputPassword}
-          placeholder="Пароль"
-          secureTextEntry={hidePassword}
-          value={password}
-          onChangeText={handlePassword}
-        />
-        <TouchableOpacity
-          style={styles.showPassword}
-          activeOpacity={0.5}
-          onPress={() => {
-            setHidePassword(!hidePassword);
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <View style={styles.page}>
+        <ImageBackground
+          source={require("./images/background.jpg")}
+          style={styles.imageBackground}
+          imageStyle={{
+            minHeight: 812,
           }}>
-          <Text style={styles.showPasswordText}>
-            {hidePassword ? "Показати" : "Приховати"}
-          </Text>
-        </TouchableOpacity>
-        <View></View>
+          <KeyboardAvoidingView
+            behavior={Platform.OS == "ios" ? "padding" : "height"}>
+            <View style={styles.formWrap}>
+              <Text style={styles.title}>Увійти</Text>
+              <TextInput
+                style={styles.inputMail}
+                placeholder="Адреса електронної пошти"
+                inputMode="email"
+                value={mail}
+                onChangeText={handleMail}
+              />
+              <TextInput
+                style={styles.inputPassword}
+                placeholder="Пароль"
+                secureTextEntry={hidePassword}
+                value={password}
+                onChangeText={handlePassword}
+              />
+              <TouchableOpacity
+                style={styles.showPassword}
+                activeOpacity={0.5}
+                onPress={() => {
+                  setHidePassword(!hidePassword);
+                }}>
+                <Text style={styles.showPasswordText}>
+                  {hidePassword ? "Показати" : "Приховати"}
+                </Text>
+              </TouchableOpacity>
+              <View></View>
 
-        <TouchableOpacity
-          style={styles.loginButton}
-          activeOpacity={0.5}
-          onPress={login}>
-          <Text style={styles.loginButtonText}>Увійти</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.loginLink}
-          activeOpacity={0.5}
-          onPress={() => changeScreen(1)}>
-          <Text style={styles.loginLinkText}>
-            Немає акаунту? Зареєструватися
-          </Text>
-        </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.loginButton}
+                activeOpacity={0.5}
+                onPress={handlelogin}>
+                <Text style={styles.loginButtonText}>Увійти</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.loginLink}
+                activeOpacity={0.5}
+                onPress={() => {
+                  navigation.navigate("Register");
+                }}>
+                <Text style={styles.loginLinkText}>
+                  Немає акаунту? Зареєструватися
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </KeyboardAvoidingView>
+        </ImageBackground>
       </View>
-    </KeyboardAvoidingView>
+    </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
-  containerKeyBoard: {
-    justifyContent: "flex-end",
+  page: {
+    flex: 1,
   },
+
   container: {
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     width: "100%",
     borderTopRightRadius: 25,
     borderTopLeftRadius: 25,
+    minHeight: 549,
+    justifyContent: "flex-end",
+    
   },
-  photoContainer: {
-    marginTop: -60,
-    height: 120,
-    width: 120,
-    backgroundColor: "#F6F6F6",
-    borderRadius: 16,
+
+  formWrap: {
+    backgroundColor: "#FFFFFF",
+    width: "100%",
+    paddingHorizontal: 20,
+    borderTopLeftRadius: 25,
+    borderTopRightRadius: 25,
+    position: "relative",
+    alignItems: "center",
+    paddingTop: 32,
+    paddingBottom: 70,
+    
   },
+
+ 
   title: {
     fontWeight: "500",
     fontSize: 30,
@@ -164,6 +196,11 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     fontSize: 16,
     lineHeight: 19,
+  },
+  imageBackground: {
+    flex: 1,
+    justifyContent: "flex-end",
+    position: "relative",
   },
 });
 
