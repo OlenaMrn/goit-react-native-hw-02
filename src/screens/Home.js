@@ -77,10 +77,10 @@ export default function Home({ navigation }) {
 
 const styles = StyleSheet.create({
   header: {
-    height: 88,
+    height: 110,
     borderBottomWidth: 1,
     borderBottomColor: "#BDBDBD",
-     },
+         },
   headerTitle: {
     color: "#212121",
     fontFamily: "Roboto-Medium",
