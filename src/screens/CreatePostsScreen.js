@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   Text,
   StyleSheet,
@@ -10,23 +10,80 @@ import {
   Platform,
   Pressable,
 } from "react-native";
+import { Camera } from "expo-camera";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome5 } from "@expo/vector-icons";
+import * as Location from "expo-location";
 
-export default function CreatePostsScreen() {
+
+export default function CreatePostsScreen({ navigation }) {
   const [name, setName] = useState("");
   const [location, setLocation] = useState("");
-
   const [isShowKeyboard, setIsShowKeyboard] = useState(false);
   const [isNameFocus, setIsNameFocus] = useState(false);
   const [isLocationFocus, setIsLocationFocus] = useState(false);
+  const [hasCameraPermission, setHasCameraPermission] = useState(null);
+  const cameraRef = useRef(null);
+  const [photo, setPhoto] = useState(null);
+  const [photoLocation, setPhotoLocation] = useState(null);
+
+  useEffect(() => {
+    getCameraPermission();
+  }, []);
+
+  const getCameraPermission = async () => {
+    const { status } = await Camera.requestCameraPermissionsAsync();
+    setHasCameraPermission(status === "granted");
+  };
 
   const keyboardHide = () => {
     setIsShowKeyboard(false);
     Keyboard.dismiss();
   };
 
+  const takePhoto = async () => {
+    if (cameraRef.current) {
+      const photo = await cameraRef.current.takePictureAsync();
+      setPhoto(photo.uri);
+
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        console.log("Permission to access location was denied");
+      }
+
+      const photoLocation = await Location.getCurrentPositionAsync({});
+
+      const coords = {
+        latitude: photoLocation.coords.latitude,
+        longitude: photoLocation.coords.longitude,
+      };
+
+
+
+      
+
+      setPhotoLocation(coords);
+      // Save the photo to the device's file system
+      // await FileSystem.copyAsync({
+      //   from: photo.uri,
+      //   to: FileSystem.documentDirectory + "photo.jpg",
+      // });
+    }
+  };
+
+  const sendPhoto = () => {
+    navigation.navigate("Публікації", {
+      photo,
+      name,
+      location,
+      ...photoLocation,
+    });
+    setName("");
+    setLocation("");
+    setPhoto(null);
+    setIsShowKeyboard(false);
+  };
   return (
     <View style={styles.container}>
       <TouchableWithoutFeedback onPress={keyboardHide}>
@@ -34,15 +91,19 @@ export default function CreatePostsScreen() {
           <KeyboardAvoidingView behavior={Platform.OS === "ios" && "padding"}>
             {!isShowKeyboard && (
               <View>
-                <View style={styles.imageBackground}>
-                  <View style={styles.photoIconWrap}>
-                    <MaterialIcons
-                      name="photo-camera"
-                      size={24}
-                      color="#BDBDBD"
-                    />
-                  </View>
-                </View>
+                {hasCameraPermission ? (
+                  <Camera style={styles.camera} ref={cameraRef}>
+                    <Pressable onPress={takePhoto} style={styles.snapContainer}>
+                      <MaterialIcons
+                        name="photo-camera"
+                        size={24}
+                        color="#BDBDBD"
+                      />
+                    </Pressable>
+                  </Camera>
+                ) : (
+                  <Text>No access to camera</Text>
+                )}
                 <Text style={styles.text}>Завантажте фото</Text>
               </View>
             )}
@@ -91,7 +152,7 @@ export default function CreatePostsScreen() {
                 }}
               />
             </View>
-            <Pressable style={styles.button}>
+            <Pressable onPress={sendPhoto} style={styles.sendBtn}>
               <Text style={styles.buttonText}>Опублікувати</Text>
             </Pressable>
             <View style={styles.trashIconWrap}>
@@ -105,6 +166,7 @@ export default function CreatePostsScreen() {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -112,7 +174,7 @@ const styles = StyleSheet.create({
     paddingTop: 28,
     backgroundColor: "#fff",
   },
-  imageBackground: {
+  camera: {
     width: "100%",
     height: 200,
     backgroundColor: "#F6F6F6",
@@ -122,10 +184,10 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  photoIconWrap: {
+  snapContainer: {
     width: 60,
     height: 60,
-    backgroundColor: "#fff",
+    backgroundColor: "#FFFFFF4D",
     justifyContent: "center",
     alignItems: "center",
     borderRadius: 50,
@@ -147,10 +209,10 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 7,
   },
-  button: {
+  sendBtn: {
     width: "100%",
     height: 50,
-    backgroundColor: "#F6F6F6",
+    backgroundColor: "#FF6C00",
     borderRadius: 100,
     justifyContent: "center",
     alignItems: "center",
@@ -158,7 +220,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     fontFamily: "Roboto-Light",
-    color: "#BDBDBD",
+    color: "#FFFFFF",
     fontSize: 16,
   },
   trashButton: {

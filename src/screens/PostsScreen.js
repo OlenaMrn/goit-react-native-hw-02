@@ -1,6 +1,28 @@
-import { Text, Image, View, StyleSheet } from "react-native";
+import { useState, useEffect } from "react";
+import {
+  Text,
+  Image,
+  View,
+  StyleSheet,
+  FlatList,
+  Pressable,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { EvilIcons } from "@expo/vector-icons";
 
-export default function PostsScreen() {
+
+
+export default function PostsScreen({ route, navigation }) {
+  // console.log(route.params);
+
+  const [posts, setPosts] = useState([]);
+
+  useEffect(() => {
+    if (route.params) {
+      setPosts((prevState) => [...prevState, route.params]);
+    }
+  }, [route.params]);
+
   return (
     <View style={styles.container}>
       <View style={styles.userWrapper}>
@@ -13,6 +35,50 @@ export default function PostsScreen() {
           <Text style={styles.userEmail}>email@example.com</Text>
         </View>
       </View>
+
+      <FlatList
+        data={posts}
+        keyExtractor={(item, indx) => indx.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.postContainer}>
+            <Image
+              // source={item.photo}
+              source={{ uri: item.photo }}
+              style={styles.postImg}
+            />
+
+            <Text style={styles.postName}>{item.name}</Text>
+
+            <View style={styles.infoWrap}>
+              <Pressable
+                style={styles.comments}
+                onPress={() => {
+                  navigation.navigate("Comments", { image: item.photo });
+                }}>
+                <EvilIcons name="comment" size={24} color="#BDBDBD" />
+                <Text style={styles.commentText}>0</Text>
+              </Pressable>
+
+              <Pressable
+                style={styles.location}
+                onPress={() =>
+                  navigation.navigate("Map", {
+                    name: item.name,
+                    latitude: item.latitude,
+                    longitude: item.longitude,
+                  })
+                }>
+                <Ionicons
+                  name="ios-location-outline"
+                  size={24}
+                  color="#BDBDBD"
+                />
+                <Text style={styles.locationText}>{item.location}</Text>
+              </Pressable>
+            </View>
+          </View>
+        )}
+      />
     </View>
   );
 }
@@ -26,6 +92,7 @@ const styles = StyleSheet.create({
   userWrapper: {
     flexDirection: "row",
     alignItems: "center",
+    marginBottom: 30,
   },
   userInfo: {
     marginLeft: 8,
@@ -41,5 +108,42 @@ const styles = StyleSheet.create({
     color: "#212121CC",
     fontSize: 11,
     lineHeight: 13,
+  },
+  postContainer: {
+    marginBottom: 20,
+    paddingHorizontal: 4,
+  },
+  postImg: {
+    width: "100%",
+    height: 240,
+    marginBottom: 8,
+  },
+  postName: {
+    fontFamily: "Roboto-Medium",
+    fontSize: 16,
+    color: "#212121",
+    lineHeight: 19,
+    marginBottom: 11,
+  },
+  infoWrap: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+  comments: { flexDirection: "row", alignItems: "center" },
+  location: { flexDirection: "row", alignItems: "center" },
+  commentText: {
+    fontFamily: "Roboto-Medium",
+    fontWeight: "400",
+    fontSize: 16,
+    color: "#BDBDBD",
+    lineHeight: 19,
+  },
+  locationText: {
+    fontFamily: "Roboto-Medium",
+    fontWeight: "400",
+    fontSize: 16,
+    color: "#212121",
+    lineHeight: 19,
+    textDecorationLine: "underline",
   },
 });

@@ -19,6 +19,8 @@ import PostsScreen from "./src/screens/PostsScreen";
 import Home from "./src/screens/Home";// 
 import ProfileScreen from "./src/screens/ProfileScreen";
 import CreatePostsScreen from "./src/screens/CreatePostsScreen";
+import MapScreen from "./src/screens/MapScreen";
+import CommentsScreen from "./src/screens/CommentsScreen";
 
 // const backgroundImage = require("./src/screens/images/background.jpg");
 
@@ -57,6 +59,22 @@ export default function App() {
           }}
           name="Home"
           component={Home}
+        />
+        <MainStack.Screen name="ПУблікаціі" component={PostsScreen} />
+
+        <MainStack.Screen name="Map" component={MapScreen} />
+
+        <MainStack.Screen
+          name="CreatePosts"
+          component={CreatePostsScreen}
+          options={{ headerShown: false }}
+        />
+        <MainStack.Screen name="Comments" component={CommentsScreen} />
+
+        <MainStack.Screen
+          name="Profile"
+          component={ProfileScreen}
+          options={{ headerShown: false }}
         />
       </MainStack.Navigator>
     </NavigationContainer>

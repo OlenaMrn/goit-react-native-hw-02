@@ -6,6 +6,7 @@ import ProfileScreen from "./ProfileScreen";
 import { Feather, AntDesign } from "@expo/vector-icons";
 import { Pressable, StyleSheet, View } from "react-native";
 
+
 const BottomTab = createBottomTabNavigator();
 
 export default function Home({ navigation }) {
