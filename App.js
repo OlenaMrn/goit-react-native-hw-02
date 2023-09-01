@@ -12,9 +12,17 @@ import {
   KeyboardAvoidingView,
 } from "react-native";
 
+import { Provider } from "react-redux";
+
+
+import { PersistGate } from "redux-persist/integration/react";
+import { store, persistor } from "./src/redux/store";
+import { UserProvider } from "./src/UserContext";
+
+
 import { useFonts } from "expo-font";
-import RegistrationScreen from "./src/screens/RegistrationScreen";
-import LoginScreen from "./src/screens/LoginScreen";
+import RegistrationScreen from "./src/screens/auth/RegistrationScreen";
+import LoginScreen from "./src/screens/auth/LoginScreen";
 import PostsScreen from "./src/screens/PostsScreen";
 import Home from "./src/screens/Home";// 
 import ProfileScreen from "./src/screens/ProfileScreen";
@@ -37,47 +45,53 @@ export default function App() {
   }
 
   return (
-    <NavigationContainer>
-      <MainStack.Navigator>
-        <MainStack.Screen
-          options={{
-            headerShown: false,
-          }}
-          name="Register"
-          component={RegistrationScreen}
-        />
-        <MainStack.Screen
-          options={{
-            headerShown: false,
-          }}
-          name="Login"
-          component={LoginScreen}
-        />
-        <MainStack.Screen
-          options={{
-            headerShown: false,
-          }}
-          name="Home"
-          component={Home}
-        />
-        <MainStack.Screen name="ПУблікаціі" component={PostsScreen} />
+    <UserProvider>
+      <Provider store={store}>
+        <PersistGate persistor={persistor}>
+          <NavigationContainer>
+            <MainStack.Navigator>
+              <MainStack.Screen
+                options={{
+                  headerShown: false,
+                }}
+                name="Register"
+                component={RegistrationScreen}
+              />
+              <MainStack.Screen
+                options={{
+                  headerShown: false,
+                }}
+                name="Login"
+                component={LoginScreen}
+              />
+              <MainStack.Screen
+                options={{
+                  headerShown: false,
+                }}
+                name="Home"
+                component={Home}
+              />
+              <MainStack.Screen name="Публікаціі" component={PostsScreen} />
 
-        <MainStack.Screen name="Map" component={MapScreen} />
+              <MainStack.Screen name="Map" component={MapScreen} />
 
-        <MainStack.Screen
-          name="CreatePosts"
-          component={CreatePostsScreen}
-          options={{ headerShown: false }}
-        />
-        <MainStack.Screen name="Comments" component={CommentsScreen} />
+              <MainStack.Screen
+                name="CreatePosts"
+                component={CreatePostsScreen}
+                options={{ headerShown: false }}
+              />
+              <MainStack.Screen name="Comments" component={CommentsScreen} />
 
-        <MainStack.Screen
-          name="Profile"
-          component={ProfileScreen}
-          options={{ headerShown: false }}
-        />
-      </MainStack.Navigator>
-    </NavigationContainer>
+              <MainStack.Screen
+                name="Profile"
+                component={ProfileScreen}
+                options={{ headerShown: false }}
+              />
+            </MainStack.Navigator>
+          </NavigationContainer>
+        </PersistGate>
+      </Provider>
+    </UserProvider>
   );
 }
 

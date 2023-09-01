@@ -44,7 +44,7 @@ const LoginScreen = ({ navigation }) => {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
       <View style={styles.page}>
         <ImageBackground
-          source={require("./images/background.jpg")}
+          source={require("../images/background.jpg")}
           style={styles.imageBackground}
           imageStyle={{
             minHeight: 812,

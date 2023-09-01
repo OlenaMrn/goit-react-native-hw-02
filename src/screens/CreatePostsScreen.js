@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  Image
 } from "react-native";
 import { Camera } from "expo-camera";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -16,6 +17,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome5 } from "@expo/vector-icons";
 import * as Location from "expo-location";
 
+import { useSelector, useDispatch } from "react-redux";
 
 export default function CreatePostsScreen({ navigation }) {
   const [name, setName] = useState("");
@@ -27,6 +29,8 @@ export default function CreatePostsScreen({ navigation }) {
   const cameraRef = useRef(null);
   const [photo, setPhoto] = useState(null);
   const [photoLocation, setPhotoLocation] = useState(null);
+  const [isPhotoTaken, setIsPhotoTaken] = useState(false);
+  
 
   useEffect(() => {
     getCameraPermission();
@@ -37,6 +41,7 @@ export default function CreatePostsScreen({ navigation }) {
     setHasCameraPermission(status === "granted");
   };
 
+  
   const keyboardHide = () => {
     setIsShowKeyboard(false);
     Keyboard.dismiss();
@@ -59,16 +64,9 @@ export default function CreatePostsScreen({ navigation }) {
         longitude: photoLocation.coords.longitude,
       };
 
-
-
-      
-
       setPhotoLocation(coords);
-      // Save the photo to the device's file system
-      // await FileSystem.copyAsync({
-      //   from: photo.uri,
-      //   to: FileSystem.documentDirectory + "photo.jpg",
-      // });
+      setIsPhotoTaken(true); 
+     
     }
   };
 
@@ -84,6 +82,29 @@ export default function CreatePostsScreen({ navigation }) {
     setPhoto(null);
     setIsShowKeyboard(false);
   };
+
+  const deletePhoto = () => {
+    setPhoto(null);
+    setIsPhotoTaken(false); 
+  };
+
+const uploadPhotoToServer = async () => {
+  const response = await fetch(photo);
+  const file = await response.blob();
+
+  const uniquePostId = Date.now().toString();
+
+  await db.storage().ref(`postImage/${uniquePostId}`).put(file);
+
+  const processedPhoto = await db
+    .storage()
+    .ref("postImage")
+    .child(uniquePostId)
+    .getDownloadURL();
+
+  return processedPhoto;
+};
+
   return (
     <View style={styles.container}>
       <TouchableWithoutFeedback onPress={keyboardHide}>
@@ -93,6 +114,12 @@ export default function CreatePostsScreen({ navigation }) {
               <View>
                 {hasCameraPermission ? (
                   <Camera style={styles.camera} ref={cameraRef}>
+                    {photo && (
+                      <Image
+                        source={{ uri: photo }}
+                        style={styles.previewImageThmb}
+                      />
+                    )}
                     <Pressable onPress={takePhoto} style={styles.snapContainer}>
                       <MaterialIcons
                         name="photo-camera"
@@ -156,8 +183,18 @@ export default function CreatePostsScreen({ navigation }) {
               <Text style={styles.buttonText}>Опублікувати</Text>
             </Pressable>
             <View style={styles.trashIconWrap}>
-              <Pressable style={styles.trashButton}>
-                <FontAwesome5 name="trash-alt" size={24} color="#DADADA" />
+              <Pressable
+                style={[
+                  styles.trashButton,
+                  { backgroundColor: isPhotoTaken ? "#DADADA" : "#FF6C00" },
+                ]}
+                onPress={isPhotoTaken ? deletePhoto : undefined} // Prevents deletePhoto from being called if there is no photo
+              >
+                <FontAwesome5
+                  name="trash-alt"
+                  size={24}
+                  color={isPhotoTaken ? "#FF6C00" : "#DADADA"}
+                />
               </Pressable>
             </View>
           </KeyboardAvoidingView>
@@ -227,6 +264,25 @@ const styles = StyleSheet.create({
     width: 70,
     height: 40,
     backgroundColor: "#F6F6F6",
+    borderRadius: 20,
+    justifyContent: "center",
+    alignItems: "center",
+    textAlign: "center",
+  },
+  trashIconWrap: {
+    alignItems: "center",
+    marginTop: 90,
+  },
+  previewImageThmb: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+  },
+  trashButton: {
+    width: 70,
+    height: 40,
     borderRadius: 20,
     justifyContent: "center",
     alignItems: "center",

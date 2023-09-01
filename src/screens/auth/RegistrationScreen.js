@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -10,50 +10,99 @@ import {
   ImageBackground,
   TouchableWithoutFeedback,
   Keyboard,
+  Pressable,
+
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 
+import { useDispatch } from "react-redux";
+import { authSignUpUser } from "../../redux/authOperations";
+
+import { onAuthStateChanged, updateProfile } from "firebase/auth";
+import { auth } from "../../../config";
+import {
+  registerDB,
+  writeUserToFirestore,
+} from "../../redux/services/userService";
+
+import { useUser, userId } from "../../UserContext";
+
+const initialState = {
+  email: "",
+  password: "",
+  login: "",
+};
+
+
+
 const RegistrationScreen = ({ navigation }) => {
-  const [login, setLogin] = useState("");
-  const [mail, setMail] = useState("");
-  const [password, setPassword] = useState("");
-  const [hidePassword, setHidePassword] = useState(true);
-
-  const handleLogin = (text) => {
-    setLogin(text);
-  };
-
-  const handleMail = (text) => {
-    setMail(text);
-  };
-
-  const handlePassword = (text) => {
-    setPassword(text);
-    };
-    
+  const [state, setState] = useState(initialState);
+   const [focusedInput, setFocusedInput] = useState(null);
+ const [isShowKeyboard, setIsShowKeyboard] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
-  const register = () => {
-    if (!login || !mail || !password) {
-      alert("Please fill in all fields");
-      return;
-    }
-      console.log(`Login: ${login}, Email: ${mail}, Password: ${password}`);
-      navigation.navigate("Home");
+ const [isLoginFocus, setIsLoginFocus] = useState(false);
+ const [isEmailFocus, setIsEmailFocus] = useState(false);
+ const [isPasswordFocus, setIsPasswordFocus] = useState(false);
+  const [isPasswordHidden, setIsPasswordHidden] = useState(true);
+  
+  const [login, setLogin] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [isFormValid, setIsFormValid] = useState(false);
+  const { setUser } = useUser();
 
+
+const dispatch = useDispatch();
+
+   useEffect(() => {
+     setIsFormValid(login !== "" && email && password);
+   }, [login, email, password]);
+
+   const addImage = (e) => {
+     e.preventDefault();
   };
+  
+   useEffect(() => {
+     onAuthStateChanged(auth, (user) => {
+       if (user) {
+         navigation.navigate("Home");
+         setLogin("");
+         setEmail("");
+         setPassword("");
+       }
+     });
+   }, []);
+  
+
+   const keyboardHide = () => {
+     setIsShowKeyboard(false);
+     Keyboard.dismiss();
+   };
+
+  const handleSignIn = async () => {
+    if (isFormValid) {
+      await registerDB(email, password);
+      updateProfile(auth.currentUser, {
+        displayName: login,
+      });
+      const id = await writeUserToFirestore(login, email, password);
+      setUser(id);
+    }
+  };
+
 
   return (
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+    <TouchableWithoutFeedback onPress={keyboardHide}>
       <View style={styles.page}>
         <ImageBackground
-          source={require("./images/background.jpg")}
+          source={require("../images/background.jpg")}
           style={styles.imageBackground}
           imageStyle={{
             minHeight: 812,
           }}>
           <KeyboardAvoidingView
-            behavior={Platform.OS == "ios" ? "padding" : "height"  } 
-            >
+            behavior={Platform.OS == "ios" ? "padding" : "height"}>
             <View style={styles.container}>
               <View style={styles.photoContainer}>
                 <TouchableOpacity style={styles.addButton} activeOpacity={0.5}>
@@ -63,40 +112,52 @@ const RegistrationScreen = ({ navigation }) => {
               <Text style={styles.title}>Реєстрація</Text>
               <TextInput
                 style={styles.inputLogin}
-                placeholder="Логін"
                 inputMode="text"
+                placeholder="Логін"
+                name="login"
                 value={login}
-                onChangeText={handleLogin}
+                onChangeText={(text) => {
+                  setLogin(text);
+                }}
+                onFocus={() => setFocusedInput("login")}
+                onBlur={() => setFocusedInput(null)}
               />
               <TextInput
                 style={styles.inputMail}
                 placeholder="Адреса електронної пошти"
                 inputMode="email"
-                value={mail}
-                onChangeText={handleMail}
+                name="email"
+                value={email}
+                onChangeText={(text) => {
+                  setEmail(text.trim());
+                }}
+                onFocus={() => setFocusedInput("email")}
+                onBlur={() => setFocusedInput(null)}
               />
               <TextInput
                 style={styles.inputPassword}
                 placeholder="Пароль"
-                secureTextEntry={hidePassword}
+                name="password"
                 value={password}
-                onChangeText={handlePassword}
+                secureTextEntry={!showPassword}
+                onChangeText={(text) => {
+                  setPassword(text);
+                }}
+                onFocus={() => setFocusedInput("password")}
+                onBlur={() => setFocusedInput(null)}
               />
-              <TouchableOpacity
-                style={styles.showPassword}
-                activeOpacity={0.5}
-                onPress={() => {
-                  setHidePassword(!hidePassword);
-                }}>
-                <Text style={styles.showPasswordText}>
-                  {hidePassword ? "Показати" : "Приховати"}
+              <Pressable
+                onPress={() => setIsPasswordHidden((prevState) => !prevState)}
+                style={styles.toggleButton}>
+                <Text style={styles.toggleText}>
+                  {isPasswordHidden ? "Показати" : "Приховати"}
                 </Text>
-              </TouchableOpacity>
+              </Pressable>
 
               <TouchableOpacity
                 style={styles.registerButton}
                 activeOpacity={0.5}
-                onPress={register}>
+                onPress={handleSignIn}>
                 <Text style={styles.registerButtonText}>Зареєструватися</Text>
               </TouchableOpacity>
               <TouchableOpacity
