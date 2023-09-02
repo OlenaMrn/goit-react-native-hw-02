@@ -1,4 +1,7 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { useRoute } from "@react-navigation/native";
+
 import {
   Text,
   Image,
@@ -10,12 +13,57 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { EvilIcons } from "@expo/vector-icons";
 
+import { db, auth } from "../../config";
+import { signOut, onAuthStateChanged } from "firebase/auth";
+import { collection, getDocs } from "firebase/firestore";
+import { useUser } from "../UserContext";
 
 
-export default function PostsScreen({ route, navigation }) {
+export default function PostsScreen({ navigation }) {
   // console.log(route.params);
-
+const route = useRoute();
   const [posts, setPosts] = useState([]);
+  const [userData, setUserData] = useState([]);
+  const { userId } = useUser();
+ 
+  useEffect(() => {
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const user = auth.currentUser;
+        setUserData(user);
+      }
+    });
+  }, []);
+  
+  useFocusEffect(
+    React.useCallback(() => {
+      const getDataFromFirestore = async () => {
+        try {
+          const snapshot = await getDocs(
+            collection(db, "users", userId, "posts")
+          );
+          const postsList = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            data: doc.data(),
+          }));
+          setPosts(postsList);
+          return postsList;
+        } catch (error) {
+          throw error;
+        }
+      };
+      getDataFromFirestore();
+    }, [])
+  );
+  
+  const handleLogout = async () => {
+    await signOut(auth);
+    setUserData([]);
+    navigation.navigate("Login");
+  };
+  
+
+ 
 
   useEffect(() => {
     if (route.params) {
@@ -26,13 +74,12 @@ export default function PostsScreen({ route, navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.userWrapper}>
-        <Image
-          source={require("./images/User.png")}
-          style={styles.image}
-        />
+        <Image source={require("./images/User.png")} style={styles.image} />
         <View style={styles.userInfo}>
-          <Text style={styles.userName}>Natali Romanova</Text>
-          <Text style={styles.userEmail}>email@example.com</Text>
+          <Text style={styles.userName}>
+            {userData.displayName && userData.displayName}
+          </Text>
+          <Text style={styles.userEmail}>{userData.email}</Text>
         </View>
       </View>
 

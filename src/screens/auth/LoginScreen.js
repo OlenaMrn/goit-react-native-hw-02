@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -14,31 +14,62 @@ import {
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 
+import { auth } from "../../../config";
+import { onAuthStateChanged } from "firebase/auth";
+import { loginDB } from "../../redux/services/userService";
+
 const LoginScreen = ({ navigation }) => {
+  
+  const [focusedInput, setFocusedInput] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isFormValid, setIsFormValid] = useState(false);
+
+  const [isError, setIsError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  
+  
   const [login, setLogin] = useState("");
   const [mail, setMail] = useState("");
   const [password, setPassword] = useState("");
   const [hidePassword, setHidePassword] = useState(true);
 
-  const handleMail = (text) => {
-    setMail(text);
-  };
+ useEffect(() => {
+   setIsFormValid(mail !== "" && password !== "");
+ }, [mail, password]);
 
-  const handlePassword = (text) => {
-    setPassword(text);
-  };
 
-  const handlelogin = () => {
-    if (!mail || !password) {
-      alert("Please fill in all fields");
-      return;
+  // const showHidePassword = () => {
+  //   setShowPassword(!showPassword);
+  // };
+  
+useEffect(() => {
+  onAuthStateChanged(auth, (user) => {
+    if (user) {
+      navigation.navigate("Home");
+      setMail("");
+      setPassword("");
     }
-    console.log(`Email: ${mail}, Password: ${password}`);
-    setLogin("");
-    setMail("");
-    setPassword("");
-    navigation.navigate("Home");
-  };
+  });
+}, []);
+
+const handleSignIn = async () => {
+  if (isFormValid) {
+    setMail(mail);
+    setPassword(password);
+    try {
+      await loginDB(mail, password);
+    } catch (error) {
+      setIsError(true);
+      setErrorMessage("Неправильний логін або пароль");
+      // console.log("No user in db");
+    }
+  }
+};
+  
+  
+  // const handleMail = (text) => {
+  //   setMail(text);
+  // };
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -58,14 +89,20 @@ const LoginScreen = ({ navigation }) => {
                 placeholder="Адреса електронної пошти"
                 inputMode="email"
                 value={mail}
-                onChangeText={handleMail}
+                name="email"
+                onChangeText={(text) => {
+                  setMail(text.trim());
+                }}
               />
               <TextInput
                 style={styles.inputPassword}
                 placeholder="Пароль"
                 secureTextEntry={hidePassword}
                 value={password}
-                onChangeText={handlePassword}
+                name="password"
+                onChangeText={(text) => {
+                  setPassword(text);
+                }}
               />
               <TouchableOpacity
                 style={styles.showPassword}
@@ -82,9 +119,13 @@ const LoginScreen = ({ navigation }) => {
               <TouchableOpacity
                 style={styles.loginButton}
                 activeOpacity={0.5}
-                onPress={handlelogin}>
+                onPress={handleSignIn}
+                disabled={!isFormValid}>
                 <Text style={styles.loginButtonText}>Увійти</Text>
               </TouchableOpacity>
+              {isError && (
+                <Text style={styles.errorMessage}>{errorMessage}</Text>
+              )}
               <TouchableOpacity
                 style={styles.loginLink}
                 activeOpacity={0.5}

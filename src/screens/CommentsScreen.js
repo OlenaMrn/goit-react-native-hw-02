@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+
+
 import {
   Text,
   TouchableWithoutFeedback,
@@ -12,7 +14,16 @@ import {
   FlatList,
   Pressable,
 } from "react-native";
+
 import { AntDesign } from "@expo/vector-icons";
+
+import { useRoute } from "@react-navigation/native";
+import { db } from "../../config";
+import { collection, getDocs } from "firebase/firestore";
+import { useDispatch } from "react-redux";
+import { addComment } from "../redux/slices/commentSlice";
+
+import { useUser } from "../UserContext";
 
 function displayDateTime() {
   const months = [
@@ -21,12 +32,12 @@ function displayDateTime() {
     "Березня",
     "Квітня",
     "Травня",
-    "Лпня",
+    "Липня",
     "Червня",
     "Серпня",
-    "Вересняr",
+    "Вересня",
     "Жовтня",
-    "Лютого",
+    "Листопада",
     "Грудня",
   ];
 
@@ -41,24 +52,74 @@ function displayDateTime() {
   return dateTimeString;
 }
 
-export default function CommentsScreen({ route }) {
+
+
+export default function CommentsScreen({ navigation }) {
+  const dispatch = useDispatch();
+  // const [comments, setComments] = useState([]);
+  const [comment, setComment] = useState("");
+  const [isCommentEntered, setIsCommentEntered] = useState(false);
+  const [postItem, setPostItem] = useState(null);
+  const route = useRoute();
+  const { postId } = route.params;
+  const { userId } = useUser();
+  
+
+  useEffect(() => {
+    const getDataFromFirestore = async () => {
+      try {
+        const snapshot = await getDocs(
+          collection(db, "users", userId, "posts")
+        );
+        const post = snapshot.docs
+          .map((doc) => ({
+            id: doc.id,
+            data: doc.data(),
+          }))
+          .filter((docData) => docData.id === postId);
+        setPostItem(post[0]);
+        return post;
+      } catch (error) {
+        console.log(error);
+        throw error;
+      }
+    };
+
+    getDataFromFirestore();
+  }, []);
+
+
+ const handlePostComment = () => {
+   const trimmedComment = comment.trim();
+   if (isCommentEntered && trimmedComment !== "") {
+     dispatch(
+       addComment({
+         userId,
+         postId,
+         comment: trimmedComment,
+         formattedDate: displayDateTime(),
+       })
+     );
+     setComment(""); // Clear the input field
+     setIsCommentEntered(false);
+
+     // Use route to navigate to the "PostsScreen"
+     if (route.name === "CommentsScreen") {
+       navigation.navigate("PostsScreen");
+     }
+   }
+ };
+
+
+
   const postImage = route.params.image;
-  const [comments, setComments] = useState([]);
+
   const [inputValue, setInputValue] = useState("");
   const [isShowKeyboard, setIsShowKeyboard] = useState(false);
 
   const keyboardHide = () => {
     Keyboard.dismiss();
     setIsShowKeyboard(false);
-  };
-
-  const sendComment = () => {
-    keyboardHide();
-    setComments([
-      ...comments,
-      { comment: inputValue, date: displayDateTime() },
-    ]);
-    setInputValue("");
   };
 
   return (
@@ -72,13 +133,13 @@ export default function CommentsScreen({ route }) {
             <View style={{ height: isShowKeyboard ? 230 : 280 }}>
               <FlatList
                 scrollEnabled={true}
-                data={comments}
+                data={comment}
                 keyExtractor={(item, indx) => indx.toString()}
                 renderItem={({ item }) => (
                   <View style={styles.commentContainer}>
                     <View style={styles.commentTextContainer}>
                       <Text style={styles.commentText}>{item.comment}</Text>
-                      <Text style={styles.date}>{item.date}</Text>
+                      <Text style={styles.date}>{item.formattedDate}</Text>
                     </View>
                     <Image
                       source={require("./images/User3.png")}
@@ -99,8 +160,13 @@ export default function CommentsScreen({ route }) {
                 onFocus={() => {
                   setIsShowKeyboard(true);
                 }}
+                value={comment}
+                onChangeText={(text) => {
+                  setComment(text);
+                  setIsCommentEntered(text.trim() !== "");
+                }}
               />
-              <Pressable style={styles.sendIcon} onPress={sendComment}>
+              <Pressable style={styles.sendIcon} onPress={handlePostComment}>
                 <AntDesign name="arrowup" size={14} color="#FFFFFF" />
               </Pressable>
             </View>
